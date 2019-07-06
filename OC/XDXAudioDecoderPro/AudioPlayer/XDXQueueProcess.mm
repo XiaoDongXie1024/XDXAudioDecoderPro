@@ -11,7 +11,7 @@
 #include "log4cplus.h"
 
 #pragma mark - Queue Size   设置队列的长度，不可过长
-const int XDXCustomQueueSize = 50;
+const int XDXCustomQueueSize = 30;
 extern int kXDXBufferSize;
 
 const static char *kModuleName = "XDXQueueProcess";

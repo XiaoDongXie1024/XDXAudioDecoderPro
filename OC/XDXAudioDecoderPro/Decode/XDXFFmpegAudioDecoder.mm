@@ -24,6 +24,8 @@
     BOOL    m_isFirstFrame;
 }
 
+@property (nonatomic, assign) int64_t baseTime;
+
 @end
 
 @implementation XDXFFmpegAudioDecoder
@@ -81,18 +83,11 @@ static int DecodeGetAVStreamFPSTimeBase(AVStream *st) {
 
 #pragma mark - Public
 - (void)startDecodeAudioDataWithAVPacket:(AVPacket)packet {
-    if (packet.flags == 1 && m_isFindIDR == NO) {
-        m_isFindIDR = YES;
-        m_base_time =  m_audioFrame->pts;
-    }
-    
-    if (m_isFindIDR == YES) {
-        [self startDecodeAudioDataWithAVPacket:packet
-                             audioCodecContext:m_audioCodecContext
-                                    audioFrame:m_audioFrame
-                                      baseTime:m_base_time
-                              audioStreamIndex:m_audioStreamIndex];
-    }
+    [self startDecodeAudioDataWithAVPacket:packet
+                         audioCodecContext:m_audioCodecContext
+                                audioFrame:m_audioFrame
+                                  baseTime:self.baseTime
+                          audioStreamIndex:m_audioStreamIndex];
 }
 
 - (void)stopDecoder {
@@ -122,9 +117,8 @@ static int DecodeGetAVStreamFPSTimeBase(AVStream *st) {
     if (result < 0) {
         log4cplus_error(kModuleName, "%s: Send audio data to decoder failed.",__func__);
     }else {
-        
-        result = avcodec_receive_frame(audioCodecContext, audioFrame);
-        while (0 == result) {
+        while (0 == avcodec_receive_frame(audioCodecContext, audioFrame)) {
+            Float64 ptsSec = audioFrame->pts* av_q2d(m_formatContext->streams[audioStreamIndex]->time_base);
             struct SwrContext *au_convert_ctx = swr_alloc();
             au_convert_ctx = swr_alloc_set_opts(au_convert_ctx,
                                                 AV_CH_LAYOUT_STEREO,
@@ -148,8 +142,8 @@ static int DecodeGetAVStreamFPSTimeBase(AVStream *st) {
             swr_convert(au_convert_ctx, &out_buffer, out_linesize, (const uint8_t **)audioFrame->data , audioFrame->nb_samples);
             swr_free(&au_convert_ctx);
             au_convert_ctx = NULL;
-            if ([self.delegate respondsToSelector:@selector(getDecodeAudioDataByFFmpeg:size:isFirstFrame:)]) {
-                [self.delegate getDecodeAudioDataByFFmpeg:out_buffer size:out_linesize isFirstFrame:m_isFirstFrame];
+            if ([self.delegate respondsToSelector:@selector(getDecodeAudioDataByFFmpeg:size:pts:isFirstFrame:)]) {
+                [self.delegate getDecodeAudioDataByFFmpeg:out_buffer size:out_linesize pts:ptsSec isFirstFrame:m_isFirstFrame];
                 m_isFirstFrame=NO;
             }
             

@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol XDXFFmpegAudioDecoderDelegate <NSObject>
 
 @optional
-- (void)getDecodeAudioDataByFFmpeg:(void *)data size:(int)size isFirstFrame:(BOOL)isFirstFrame;
+- (void)getDecodeAudioDataByFFmpeg:(void *)data size:(int)size pts:(int64_t)pts isFirstFrame:(BOOL)isFirstFrame;
 
 @end
 

@@ -115,27 +115,55 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
 }
 
 - (void)startAudioPlayer {
+    if (self.isRunning) {
+        NSLog(@"Audio Player: the player is running !");
+        return;
+    }
+    
     if (self.isInitFinish) {
-        [self startAudioPlayerWithAudioInfo:m_audioInfo
-                                  isRunning:&_isRunning];
+        [self startAudioPlayerWithAudioInfo:m_audioInfo];
     }else {
         NSLog(@"Audio Player: start audio player failed, not init !");
     }
 }
 
 - (void)pauseAudioPlayer {
-    [self pauseAudioPlayerWithAudioInfo:m_audioInfo
-                               isRunning:&_isRunning];
+    if (!self.isRunning) {
+        NSLog(@"Audio Player: audio player is not running !");
+        return;
+    }
+    
+    BOOL isSuccess = [self pauseAudioPlayerWithAudioInfo:m_audioInfo];
+    
+    if (isSuccess) {
+        self.isRunning = NO;
+    }
 }
 
 - (void)stopAudioPlayer {
-    [self stopAudioQueueRecorderWithAudioInfo:m_audioInfo
-                                    isRunning:&_isRunning];
+    if (self.isRunning == NO) {
+        NSLog(@"Audio Player: Stop recorder repeat \n");
+        return;
+    }
+    
+    [self stopAudioQueueRecorderWithAudioInfo:m_audioInfo];
+}
+
+- (void)resumeAudioPlayer {
+    if (self.isRunning) {
+        NSLog(@"Audio Player: audio player is running !");
+        return;
+    }
+    
+    [self resumeAudioPlayerWithAudioInfo:m_audioInfo];
 }
 
 - (void)freeAudioPlayer {
-    [self freeAudioQueueRecorderWithAudioInfo:m_audioInfo
-                                    isRunning:&_isRunning];
+    if (self.isRunning) {
+        [self stopAudioQueueRecorderWithAudioInfo:m_audioInfo];
+    }
+    
+    [self freeAudioQueueRecorderWithAudioInfo:m_audioInfo];
 }
 
 + (int)audioBufferSize {
@@ -212,33 +240,22 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
                                      (packetDesc ? size : 0),
                                      packetDesc);
 
-        }else {
-            _audioBufferQueue->ResetFreeQueue(_audioBufferQueue->m_work_queue, _audioBufferQueue->m_free_queue);
-            AudioQueueStop (
-                            audioInfo->mQueue,
-                            false
-                            );
         }
-
-//        free(node->data);
-//        node->data = NULL;
-        memset(node->data, 0, node->size);
+        
         node->size = 0;
         audioBufferQueue->EnQueue(audioBufferQueue->m_free_queue, node);
     }else {
-        _audioBufferQueue->ResetFreeQueue(_audioBufferQueue->m_work_queue, _audioBufferQueue->m_free_queue);
-        AudioQueueStop (
-                        audioInfo->mQueue,
-                        false
-                        );
+        inBuffer->mAudioDataByteSize = audioInfo->mbufferSize;
+        memset(inBuffer->mAudioData, 0, audioInfo->mbufferSize);
+        AudioQueueEnqueueBuffer (audioInfo->mQueue, inBuffer, 0, NULL);
     }
 }
 
-- (BOOL)startAudioPlayerWithAudioInfo:(XDXAudioInfoRef)audioInfo isRunning:(BOOL *)isRunning {
+- (BOOL)startAudioPlayerWithAudioInfo:(XDXAudioInfoRef)audioInfo {
     for (int i = 0; i != kNumberBuffers; i++) {
-        [self receiveAudioDataWithAudioQueueBuffer:audioInfo->mBuffers[i]
-                                         audioInfo:audioInfo
-                                  audioBufferQueue:_audioBufferQueue];
+        memset(audioInfo->mBuffers[i]->mAudioData, 0, audioInfo->mbufferSize);
+        audioInfo->mBuffers[i]->mAudioDataByteSize = audioInfo->mbufferSize;
+        AudioQueueEnqueueBuffer (audioInfo->mQueue, audioInfo->mBuffers[i], 0, NULL);
     }
     
     OSStatus status;
@@ -252,29 +269,29 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
     }
 }
 
-- (BOOL)pauseAudioPlayerWithAudioInfo:(XDXAudioInfoRef)audioInfo isRunning:(BOOL *)isRunning {
-    if (!*isRunning) {
-        NSLog(@"Audio Player: audio capture is not running !");
-        return NO;
-    }
-    
+- (BOOL)pauseAudioPlayerWithAudioInfo:(XDXAudioInfoRef)audioInfo {
     OSStatus status = AudioQueuePause(audioInfo->mQueue);
     if (status != noErr) {
         NSLog(@"Audio Player: Audio Queue pause failed status:%d \n",(int)status);
         return NO;
     }else {
         NSLog(@"Audio Player: Audio Queue pause successful");
-        *isRunning = NO;
         return YES;
     }
 }
 
--(BOOL)stopAudioQueueRecorderWithAudioInfo:(XDXAudioInfoRef)audioInfo isRunning:(BOOL *)isRunning {
-    if (*isRunning == NO) {
-        NSLog(@"Audio Player: Stop recorder repeat \n");
+- (BOOL)resumeAudioPlayerWithAudioInfo:(XDXAudioInfoRef)audioInfo {
+    OSStatus status = AudioQueueStart(audioInfo->mQueue, NULL);
+    if (status != noErr) {
+        NSLog(@"Audio Player: Audio Queue resume failed status:%d \n",(int)status);
         return NO;
+    }else {
+        NSLog(@"Audio Player: Audio Queue resume successful");
+        return YES;
     }
-    
+}
+
+-(BOOL)stopAudioQueueRecorderWithAudioInfo:(XDXAudioInfoRef)audioInfo {
     if (audioInfo->mQueue) {
         OSStatus stopRes = AudioQueueStop(audioInfo->mQueue, true);
         
@@ -291,11 +308,7 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
     }
 }
 
--(BOOL)freeAudioQueueRecorderWithAudioInfo:(XDXAudioInfoRef)audioInfo isRunning:(BOOL *)isRunning {
-    if (*isRunning) {
-        [self stopAudioQueueRecorderWithAudioInfo:audioInfo isRunning:isRunning];
-    }
-    
+-(BOOL)freeAudioQueueRecorderWithAudioInfo:(XDXAudioInfoRef)audioInfo {
     if (audioInfo->mQueue) {
         for (int i = 0; i < kNumberBuffers; i++) {
             AudioQueueFreeBuffer(audioInfo->mQueue, audioInfo->mBuffers[i]);
@@ -306,7 +319,6 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
             NSLog(@"Audio Player: Dispose failed: %d",status);
         }else {
             audioInfo->mQueue = NULL;
-            *isRunning = NO;
             NSLog(@"Audio Player: free AudioQueue successful.");
             return YES;
         }
@@ -409,5 +421,6 @@ static void AudioQueuePlayerPropertyListenerProc  (void *              inUserDat
     NSLog(@"Audio Player: starup PCM audio encoder:%f,%d",sampleRate,channelCount);
     return dataFormat;
 }
+
 @end
 

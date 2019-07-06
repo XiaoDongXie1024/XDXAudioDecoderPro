@@ -41,6 +41,7 @@ SingletonH
  */
 - (void)startAudioPlayer;
 - (void)pauseAudioPlayer;
+- (void)resumeAudioPlayer;
 - (void)stopAudioPlayer;
 - (void)freeAudioPlayer;
 

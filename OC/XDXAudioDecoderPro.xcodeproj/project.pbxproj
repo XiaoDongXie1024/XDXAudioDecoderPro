@@ -10,6 +10,7 @@
 		2335ACFD22C849AC007E0355 /* XDXQueueProcess.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2335ACF922C849AC007E0355 /* XDXQueueProcess.mm */; };
 		2335ACFE22C849AC007E0355 /* XDXAudioQueuePlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2335ACFA22C849AC007E0355 /* XDXAudioQueuePlayer.mm */; };
 		2335AD0122C84DA0007E0355 /* test.MOV in Resources */ = {isa = PBXBuildFile; fileRef = 2335AD0022C84DA0007E0355 /* test.MOV */; };
+		234FA10622D0A36B00AE5820 /* XDXAduioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 234FA10422D0A36A00AE5820 /* XDXAduioDecoder.m */; };
 		23C8B3AB22A355A500FE8A08 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 23C8B3AA22A355A500FE8A08 /* AppDelegate.m */; };
 		23C8B3AE22A355A500FE8A08 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 23C8B3AD22A355A500FE8A08 /* ViewController.mm */; };
 		23C8B3B122A355A500FE8A08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 23C8B3AF22A355A500FE8A08 /* Main.storyboard */; };
@@ -44,6 +45,8 @@
 		2335ACFF22C849C7007E0355 /* XDXSingleton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XDXSingleton.h; sourceTree = "<group>"; };
 		2335AD0022C84DA0007E0355 /* test.MOV */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = test.MOV; sourceTree = "<group>"; };
 		2335AD0222C85173007E0355 /* log4cplus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log4cplus.h; sourceTree = "<group>"; };
+		234FA10422D0A36A00AE5820 /* XDXAduioDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XDXAduioDecoder.m; sourceTree = "<group>"; };
+		234FA10522D0A36A00AE5820 /* XDXAduioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XDXAduioDecoder.h; sourceTree = "<group>"; };
 		23C8B3A622A355A500FE8A08 /* XDXAudioDecoderPro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XDXAudioDecoderPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		23C8B3A922A355A500FE8A08 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		23C8B3AA22A355A500FE8A08 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -538,6 +541,8 @@
 		480B07C822A657A500D86976 /* Decode */ = {
 			isa = PBXGroup;
 			children = (
+				234FA10522D0A36A00AE5820 /* XDXAduioDecoder.h */,
+				234FA10422D0A36A00AE5820 /* XDXAduioDecoder.m */,
 				480B07DA22A8E77900D86976 /* XDXFFmpegAudioDecoder.h */,
 				480B07DB22A8E77900D86976 /* XDXFFmpegAudioDecoder.mm */,
 			);
@@ -615,6 +620,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				234FA10622D0A36B00AE5820 /* XDXAduioDecoder.m in Sources */,
 				23C8B3AE22A355A500FE8A08 /* ViewController.mm in Sources */,
 				2335ACFE22C849AC007E0355 /* XDXAudioQueuePlayer.mm in Sources */,
 				480B07DC22A8E77900D86976 /* XDXFFmpegAudioDecoder.mm in Sources */,
